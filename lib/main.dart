@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dashboard.dart';
 import 'tutorials.dart';
 import 'media.dart';
@@ -26,6 +27,10 @@ class MainApp extends StatelessWidget {
     return BlocProvider<NavigationBloc>(
       create: (_) => NavigationBloc(),
       child: MaterialApp(
+        theme: ThemeData(
+          fontFamily: GoogleFonts.wixMadeforText().fontFamily,
+          scaffoldBackgroundColor: Color(0xFFDFE1D3),
+        ),
         home: Scaffold(
           body: BlocBuilder<NavigationBloc, NavigationState>(
             builder: (context, state) {

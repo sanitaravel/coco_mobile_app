@@ -34,7 +34,19 @@
 - **Code Style**: Standard Dart/Flutter conventions
 - **Icons**: Use FontAwesome icons via font_awesome_flutter package
 - **State**: Implement features using BLoC pattern with flutter_bloc
-- **Commit Naming**: Use conventional commits format (e.g., `feat:` for new features, `fix:` for bug fixes, `docs:` for documentation updates, `refactor:` for code refactoring, `test:` for adding tests, `chore:` for maintenance tasks)
+
+## Commit Messages
+When generating commit messages, follow these guidelines:
+- Use conventional commits format with the following types:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation updates
+  - `refactor:` for code refactoring
+  - `test:` for adding tests
+  - `chore:` for maintenance tasks
+- Include a brief, descriptive message after the type
+- Keep messages concise but informative
+- Example: `feat: add user authentication to dashboard`
 
 ## Key Files
 - `pubspec.yaml`: Dependencies and Flutter config
