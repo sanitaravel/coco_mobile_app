@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../widgets/task_card.dart';
+import '../widgets/social_card.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -16,6 +17,25 @@ class Dashboard extends StatelessWidget {
     });
 
     final double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+
+    final socialNetworks = [
+      {'name': 'TikTok', 'subscribers': 1234},
+      {'name': 'Instagram', 'subscribers': -567},
+    ];
+
+    List<Widget> socialCards = [];
+    for (int i = 0; i < socialNetworks.length; i++) {
+      socialCards.add(SizedBox(
+        width: 200,
+        child: SocialCard(
+          networkName: socialNetworks[i]['name'] as String,
+          subscribers: socialNetworks[i]['subscribers'] as int,
+        ),
+      ));
+      if (i < socialNetworks.length - 1) {
+        socialCards.add(SizedBox(width: 16));
+      }
+    }
 
     return Scaffold(
       body: Container(
@@ -148,6 +168,23 @@ class Dashboard extends StatelessWidget {
             TaskCard(
               title: 'Current Task Title',
               subtitle: 'Subtitle for the current task',
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Socials',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 24,
+                letterSpacing: -0.01,
+                color: const Color(0xFF3D402E),
+              ),
+            ),
+            SizedBox(
+              height: 110,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: socialCards,
+              ),
             ),
           ],
         ),
