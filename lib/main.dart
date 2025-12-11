@@ -40,17 +40,17 @@ class MainApp extends StatelessWidget {
           bottomNavigationBar: BlocBuilder<NavigationBloc, NavigationState>(
             builder: (context, state) {
               return BottomNavigationBar(
-                items: const <BottomNavigationBarItem>[
+                items: <BottomNavigationBarItem>[
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.dashboard),
+                    icon: FaIcon(FontAwesomeIcons.chartBar),
                     label: 'Dashboard',
                   ),
                   BottomNavigationBarItem(
-                    icon: FaIcon(FontAwesomeIcons.book),
+                    icon: FaIcon(FontAwesomeIcons.file),
                     label: 'Tutorials',
                   ),
                   BottomNavigationBarItem(
-                    icon: FaIcon(FontAwesomeIcons.photoFilm),
+                    icon: FaIcon(FontAwesomeIcons.camera),
                     label: 'Media',
                   ),
                   BottomNavigationBarItem(
@@ -59,6 +59,11 @@ class MainApp extends StatelessWidget {
                   ),
                 ],
                 currentIndex: state.currentIndex,
+                selectedItemColor: Color(0xFF73AE50),
+                unselectedItemColor: Color(0xFFB7B8B2),
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+                type: BottomNavigationBarType.fixed,
                 onTap: (index) {
                   context.read<NavigationBloc>().add(ChangePage(index));
                 },
