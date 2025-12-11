@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../widgets/task_card.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -133,6 +134,20 @@ class Dashboard extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Upcoming event',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 24,
+                letterSpacing: -0.01,
+                color: const Color(0xFF3D402E),
+              ),
+            ),
+            TaskCard(
+              title: 'Current Task Title',
+              subtitle: 'Subtitle for the current task',
             ),
           ],
         ),
