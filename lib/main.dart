@@ -37,38 +37,55 @@ class MainApp extends StatelessWidget {
               return _pages[state.currentIndex];
             },
           ),
-          bottomNavigationBar: BlocBuilder<NavigationBloc, NavigationState>(
-            builder: (context, state) {
-              return BottomNavigationBar(
-                items: <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    icon: FaIcon(FontAwesomeIcons.chartBar),
-                    label: 'Dashboard',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: FaIcon(FontAwesomeIcons.file),
-                    label: 'Tutorials',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: FaIcon(FontAwesomeIcons.camera),
-                    label: 'Media',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: FaIcon(FontAwesomeIcons.calendar),
-                    label: 'Calendar',
-                  ),
-                ],
-                currentIndex: state.currentIndex,
-                selectedItemColor: Color(0xFF73AE50),
-                unselectedItemColor: Color(0xFFB7B8B2),
-                showSelectedLabels: false,
-                showUnselectedLabels: false,
-                type: BottomNavigationBarType.fixed,
-                onTap: (index) {
-                  context.read<NavigationBloc>().add(ChangePage(index));
-                },
-              );
-            },
+          bottomNavigationBar: Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: Color(0xFFDFE1D3),
+              boxShadow: [
+                BoxShadow(
+                  offset: Offset(0, 7),
+                  blurRadius: 15,
+                  spreadRadius: 0,
+                  color: Color(0xFF6C7242),
+                ),
+              ],
+            ),
+            child: BlocBuilder<NavigationBloc, NavigationState>(
+              builder: (context, state) {
+                return BottomNavigationBar(
+                  items: <BottomNavigationBarItem>[
+                    BottomNavigationBarItem(
+                      icon: FaIcon(FontAwesomeIcons.chartBar),
+                      label: 'Dashboard',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: FaIcon(FontAwesomeIcons.file),
+                      label: 'Tutorials',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: FaIcon(FontAwesomeIcons.camera),
+                      label: 'Media',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: FaIcon(FontAwesomeIcons.calendar),
+                      label: 'Calendar',
+                    ),
+                  ],
+                  currentIndex: state.currentIndex,
+                  selectedItemColor: Color(0xFF73AE50),
+                  unselectedItemColor: Color(0xFFB7B8B2),
+                  showSelectedLabels: false,
+                  showUnselectedLabels: false,
+                  type: BottomNavigationBarType.fixed,
+                  iconSize: 36,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  onTap: (index) {
+                    context.read<NavigationBloc>().add(ChangePage(index));
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),
