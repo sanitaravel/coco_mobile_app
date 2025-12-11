@@ -22,6 +22,13 @@ class MainApp extends StatelessWidget {
     Calendar(),
   ];
 
+  static const List<String> _titles = <String>[
+    'Dashboard',
+    'Tutorials',
+    'Media',
+    'Calendar',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<NavigationBloc>(
@@ -31,28 +38,46 @@ class MainApp extends StatelessWidget {
           fontFamily: GoogleFonts.wixMadeforText().fontFamily,
           scaffoldBackgroundColor: Color(0xFFDFE1D3),
         ),
-        home: Scaffold(
-          body: BlocBuilder<NavigationBloc, NavigationState>(
-            builder: (context, state) {
-              return _pages[state.currentIndex];
-            },
-          ),
-          bottomNavigationBar: Container(
-            height: 70,
-            decoration: BoxDecoration(
-              color: Color(0xFFDFE1D3),
-              boxShadow: [
-                BoxShadow(
-                  offset: Offset(0, 7),
-                  blurRadius: 15,
-                  spreadRadius: 0,
-                  color: Color(0xFF6C7242),
+        home: BlocBuilder<NavigationBloc, NavigationState>(
+          builder: (context, state) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  _titles[state.currentIndex],
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    letterSpacing: -0.14,
+                    color: Color(0xFF73AE50),
+                  ),
                 ),
-              ],
-            ),
-            child: BlocBuilder<NavigationBloc, NavigationState>(
-              builder: (context, state) {
-                return BottomNavigationBar(
+                actions: [
+                  IconButton(
+                    icon: FaIcon(FontAwesomeIcons.cog),
+                    onPressed: () {
+                      // TODO: settings
+                    },
+                  ),
+                ],
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+              ),
+              body: _pages[state.currentIndex],
+              bottomNavigationBar: Container(
+                height: 70,
+                padding: EdgeInsets.symmetric(horizontal: 30),
+                decoration: BoxDecoration(
+                  color: Color(0xFFDFE1D3),
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(0, 7),
+                      blurRadius: 15,
+                      spreadRadius: 0,
+                      color: Color(0xFF6C7242),
+                    ),
+                  ],
+                ),
+                child: BottomNavigationBar(
                   items: <BottomNavigationBarItem>[
                     BottomNavigationBarItem(
                       icon: FaIcon(FontAwesomeIcons.chartBar),
@@ -83,10 +108,10 @@ class MainApp extends StatelessWidget {
                   onTap: (index) {
                     context.read<NavigationBloc>().add(ChangePage(index));
                   },
-                );
-              },
-            ),
-          ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
