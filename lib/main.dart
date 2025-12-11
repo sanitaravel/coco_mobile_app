@@ -35,7 +35,7 @@ class MainApp extends StatelessWidget {
       create: (_) => NavigationBloc(),
       child: MaterialApp(
         theme: ThemeData(
-          fontFamily: GoogleFonts.wixMadeforText().fontFamily,
+          textTheme: GoogleFonts.wixMadeforTextTextTheme(),
           scaffoldBackgroundColor: Color(0xFFDFE1D3),
         ),
         home: BlocBuilder<NavigationBloc, NavigationState>(
@@ -53,7 +53,7 @@ class MainApp extends StatelessWidget {
                 ),
                 actions: [
                   IconButton(
-                    icon: FaIcon(FontAwesomeIcons.cog),
+                    icon: FaIcon(FontAwesomeIcons.gear),
                     onPressed: () {
                       // TODO: settings
                     },

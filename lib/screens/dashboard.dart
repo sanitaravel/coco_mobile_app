@@ -5,9 +5,21 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Dashboard Page'),
+    return Scaffold(
+      body: Container(
+        margin: const EdgeInsets.all(30.0),
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: Text(
+            'Hello, [name]!',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 38,
+              letterSpacing: -0.38,
+              color: const Color(0xFF3D402E),
+            ),
+          ),
+        ),
       ),
     );
   }
