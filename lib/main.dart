@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'screens/dashboard.dart';
 import 'screens/tutorials.dart';
 import 'screens/media.dart';
@@ -42,7 +41,7 @@ class MainAppState extends State<MainApp> {
       create: (_) => NavigationBloc(),
       child: MaterialApp(
         theme: ThemeData(
-          textTheme: GoogleFonts.wixMadeforTextTextTheme(),
+          fontFamily: 'WixMadeforText',
           scaffoldBackgroundColor: Color(0xFFDFE1D3),
         ),
         home: BlocBuilder<NavigationBloc, NavigationState>(
