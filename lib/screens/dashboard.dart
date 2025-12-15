@@ -46,7 +46,7 @@ class Dashboard extends StatelessWidget {
             Text(
               'Hello, [name]!',
               style: TextStyle(
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w600,
                 fontSize: 38,
                 letterSpacing: -0.38,
                 color: const Color(0xFF3D402E),

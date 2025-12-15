@@ -58,8 +58,9 @@ class MainAppState extends State<MainApp> {
                 title: Text(
                   _titles[state.currentIndex],
                   style: TextStyle(
+                    fontFamily: 'WixMadeforText',
                     fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontSize: 18,
                     letterSpacing: -0.14,
                     color: Color(0xFF73AE50),
                   ),
@@ -117,6 +118,13 @@ class MainAppState extends State<MainApp> {
                   unselectedItemColor: Color(0xFFB7B8B2),
                   showSelectedLabels: false,
                   showUnselectedLabels: false,
+                  selectedLabelStyle: TextStyle(
+                    fontFamily: 'WixMadeforText',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    letterSpacing: -0.12,
+                    color: Color(0xFF73AE50),
+                  ),
                   type: BottomNavigationBarType.fixed,
                   iconSize: 36,
                   backgroundColor: Colors.transparent,
