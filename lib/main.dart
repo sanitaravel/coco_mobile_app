@@ -21,7 +21,7 @@ class MainApp extends StatefulWidget {
 class MainAppState extends State<MainApp> {
   final PageController _pageController = PageController();
 
-  static const List<Widget> _pages = <Widget>[
+  static final List<Widget> _pages = <Widget>[
     Dashboard(),
     Tutorials(),
     Media(),
@@ -78,6 +78,7 @@ class MainAppState extends State<MainApp> {
               ),
               body: PageView(
                 controller: _pageController,
+                physics: NeverScrollableScrollPhysics(),
                 children: _pages,
               ),
               bottomNavigationBar: Container(

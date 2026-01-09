@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
-class Tutorials extends StatelessWidget {
+class Tutorials extends StatefulWidget {
   const Tutorials({super.key});
+
+  @override
+  State<Tutorials> createState() => _TutorialsState();
+}
+
+class _TutorialsState extends State<Tutorials> {
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +113,56 @@ class Tutorials extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 64),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: SizedBox(
+              height: 50,
+              child: ListView(
+                clipBehavior: Clip.none,
+                scrollDirection: Axis.horizontal,
+                children: [
+                  'Public speaking',
+                  'Writing',
+                  'Filming',
+                  'Research',
+                ].asMap().entries.map((entry) {
+                  int index = entry.key;
+                  String tag = entry.value;
+                  return Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = index),
+                        child: _buildTag(tag, index == _selectedIndex),
+                      ),
+                      if (index < 3) const SizedBox(width: 8),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTag(String text, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 300),
+        style: TextStyle(
+          fontFamily: 'Wix Madefor Text',
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          fontSize: 16,
+          color: isSelected ? const Color(0xFF548E32) : const Color(0xFF364027),
+        ),
+        child: Text(text),
       ),
     );
   }
