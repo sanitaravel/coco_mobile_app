@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../widgets/task_card.dart';
 import '../widgets/social_card.dart';
+import '../widgets/social_details.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -23,6 +24,21 @@ class Dashboard extends StatelessWidget {
       {'name': 'Instagram', 'subscribers': -567},
     ];
 
+    void showSocialDetails(BuildContext context, String networkName, int subscribers) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => SizedBox(
+          height: MediaQuery.of(context).size.height * 0.75,
+          child: SocialDetails(
+            networkName: networkName,
+            subscribers: subscribers,
+          ),
+        ),
+      );
+    }
+
     List<Widget> socialCards = [];
     for (int i = 0; i < socialNetworks.length; i++) {
       socialCards.add(SizedBox(
@@ -30,7 +46,8 @@ class Dashboard extends StatelessWidget {
         child: SocialCard(
           networkName: socialNetworks[i]['name'] as String,
           subscribers: socialNetworks[i]['subscribers'] as int,
-        ),
+          onTap: () => showSocialDetails(context, socialNetworks[i]['name'] as String, socialNetworks[i]['subscribers'] as int),
+          ),
       ));
       if (i < socialNetworks.length - 1) {
         socialCards.add(SizedBox(width: 16));
