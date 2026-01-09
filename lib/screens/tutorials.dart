@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/tutorial_card.dart';
 
 class Tutorials extends StatefulWidget {
   const Tutorials({super.key});
@@ -140,6 +141,36 @@ class _TutorialsState extends State<Tutorials> {
                   );
                 }).toList(),
               ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 200,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              children: [
+                TutorialCard(
+                  imagePath: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop&crop=center',
+                  title: 'Public Speaking Basics',
+                  subtitle: 'Learn the fundamentals of effective communication',
+                ),
+                TutorialCard(
+                  imagePath: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop&crop=center',
+                  title: 'Content Writing Tips',
+                  subtitle: 'Master the art of engaging written content',
+                ),
+                TutorialCard(
+                  imagePath: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop&crop=center',
+                  title: 'Public Speaking Basics',
+                  subtitle: 'Learn the fundamentals of effective communication',
+                ),
+                TutorialCard(
+                  imagePath: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop&crop=center',
+                  title: 'Content Writing Tips',
+                  subtitle: 'Master the art of engaging written content',
+                ),
+              ],
             ),
           ),
         ],
