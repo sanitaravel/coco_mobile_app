@@ -117,6 +117,11 @@ class TasksCubit extends Cubit<TasksState> {
     emit(state.copyWith(tasks: updatedTasks));
   }
 
+  void deleteTask(String taskId) {
+    final updatedTasks = state.tasks.where((task) => task.id != taskId).toList();
+    emit(state.copyWith(tasks: updatedTasks));
+  }
+
   Task? getClosestTask() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

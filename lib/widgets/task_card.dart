@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/task_model.dart';
 import '../blocs/tasks_cubit.dart';
+import '../blocs/navigation_bloc.dart';
 
 class TaskCard extends StatefulWidget {
   final Task task;
@@ -187,6 +188,62 @@ class TaskCardState extends State<TaskCard> {
                           ),
                         );
                       }),
+                      const SizedBox(height: 30),
+                      // Bottom buttons
+                      Row(
+                        children: [
+                          // Delete button
+                          TextButton(
+                            onPressed: () {
+                              context.read<TasksCubit>().deleteTask(currentTask.id);
+                              Navigator.of(context).pop(); // Close the modal
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Color(0xFF3D402E),
+                                fontFamily: 'WixMadeforText',
+                                fontSize: 24,
+                                fontStyle: FontStyle.normal,
+                                fontWeight: FontWeight.w600,
+                                height: 1.5,
+                                letterSpacing: -0.015 * 16,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          // Go to media button
+                          TextButton(
+                            onPressed: () {
+                              // Navigate to media page (index 2)
+                              context.read<NavigationBloc>().add(ChangePage(2));
+                              Navigator.of(context).pop(); // Close the modal
+                            },
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Go to Media',
+                                  style: const TextStyle(
+                                    color: Color(0xFF73AE50),
+                                    fontFamily: 'WixMadeforText',
+                                    fontSize: 24,
+                                    fontStyle: FontStyle.normal,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.5,
+                                    letterSpacing: -0.015 * 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Color(0xFF73AE50),
+                                  size: 24,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
