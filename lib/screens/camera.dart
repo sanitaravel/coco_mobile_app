@@ -43,6 +43,7 @@ class CameraState {
   final double teleprompterFontSize;
   final double teleprompterOpacity;
   final double teleprompterScrollSpeed;
+  final bool teleprompterActive;
 
   const CameraState({
     this.isReady = false,
@@ -55,6 +56,7 @@ class CameraState {
     this.teleprompterFontSize = 32.0,
     this.teleprompterOpacity = 0.6,
     this.teleprompterScrollSpeed = 1.0,
+    this.teleprompterActive = false,
   });
 
   CameraState copyWith({
@@ -68,6 +70,7 @@ class CameraState {
     double? teleprompterFontSize,
     double? teleprompterOpacity,
     double? teleprompterScrollSpeed,
+    bool? teleprompterActive,
   }) {
     return CameraState(
       isReady: isReady ?? this.isReady,
@@ -80,6 +83,7 @@ class CameraState {
       teleprompterFontSize: teleprompterFontSize ?? this.teleprompterFontSize,
       teleprompterOpacity: teleprompterOpacity ?? this.teleprompterOpacity,
       teleprompterScrollSpeed: teleprompterScrollSpeed ?? this.teleprompterScrollSpeed,
+      teleprompterActive: teleprompterActive ?? this.teleprompterActive,
     );
   }
 }
@@ -144,6 +148,7 @@ class CameraCubit extends Cubit<CameraState> {
     emit(state.copyWith(
       teleprompterText: processedText,
       originalTeleprompterText: text,
+      teleprompterActive: false,
     ));
   }
 
@@ -262,6 +267,10 @@ class CameraCubit extends Cubit<CameraState> {
     try {
       if (state.mode == CaptureMode.photo) {
         final XFile file = await ctrl.takePicture();
+        // Start teleprompter if text is available
+        if (state.teleprompterText != 'No text') {
+          emit(state.copyWith(teleprompterActive: true));
+        }
         return CaptureResult(file: File(file.path), type: CapturedType.photo);
       }
 
@@ -270,10 +279,14 @@ class CameraCubit extends Cubit<CameraState> {
         await ctrl.prepareForVideoRecording();
         await ctrl.startVideoRecording();
         emit(state.copyWith(isRecording: true));
+        // Start teleprompter if text is available
+        if (state.teleprompterText != 'No text') {
+          emit(state.copyWith(teleprompterActive: true));
+        }
         return null; // no result yet
       } else {
         final XFile file = await ctrl.stopVideoRecording();
-        emit(state.copyWith(isRecording: false));
+        emit(state.copyWith(isRecording: false, teleprompterActive: false));
         return CaptureResult(file: File(file.path), type: CapturedType.video);
       }
     } catch (e) {
@@ -379,11 +392,11 @@ class _CameraViewState extends State<_CameraView> with TickerProviderStateMixin 
           final cubit = context.read<CameraCubit>();
           final ctrl = cubit.controller;
 
-          // Start auto-scroll when text changes
+          // Start auto-scroll when teleprompter is activated
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (state.teleprompterText != 'No text' && !_isScrolling) {
+            if (state.teleprompterActive && !_isScrolling) {
               _startAutoScroll(state);
-            } else if (state.teleprompterText == 'No text') {
+            } else if (!state.teleprompterActive) {
               _stopAutoScroll();
             }
           });
@@ -524,15 +537,82 @@ class _CameraViewState extends State<_CameraView> with TickerProviderStateMixin 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _SettingsSheet(cubit: cubit),
+      builder: (context) => _SettingsSheet(cubit: cubit, onShowTextInput: () => _showTextInputDialog(context, cubit)),
+    );
+  }
+
+  void _showTextInputDialog(BuildContext context, CameraCubit cubit) {
+    final TextEditingController controller = TextEditingController(
+      text: cubit.state.originalTeleprompterText
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFDFE1D3),
+          title: const Text(
+            'Enter Teleprompter Text',
+            style: TextStyle(
+              color: Color(0xFF364027),
+              fontFamily: 'Wix Madefor Text',
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            maxLines: 8,
+            decoration: const InputDecoration(
+              hintText: 'Paste your text here...',
+              border: OutlineInputBorder(),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF73AE50)),
+              ),
+            ),
+            style: const TextStyle(
+              color: Color(0xFF364027),
+              fontFamily: 'Wix Madefor Text',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF364027),
+                  fontFamily: 'Wix Madefor Text',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                cubit.setTeleprompterText(controller.text);
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Save',
+                style: TextStyle(
+                  color: Color(0xFF73AE50),
+                  fontFamily: 'Wix Madefor Text',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _SettingsSheet extends StatelessWidget {
   final CameraCubit cubit;
+  final VoidCallback onShowTextInput;
 
-  const _SettingsSheet({required this.cubit});
+  const _SettingsSheet({required this.cubit, required this.onShowTextInput});
 
   @override
   Widget build(BuildContext context) {
@@ -646,53 +726,7 @@ class _SettingsSheet extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Opacity(
-                  opacity: state.teleprompterOpacity,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF364027),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: state.teleprompterText.isEmpty || state.teleprompterText == 'No text'
-                        ? ElevatedButton(
-                            onPressed: () => _showTextInputDialog(context, cubit),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF73AE50),
-                              foregroundColor: const Color(0xFFDFE1D3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            ),
-                            child: const Text(
-                              'Add text',
-                              style: TextStyle(
-                                fontFamily: 'Wix Madefor Text',
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          )
-                        : GestureDetector(
-                            onTap: () => _showTextInputDialog(context, cubit),
-                            child: Text(
-                              state.teleprompterText.split('\n').firstWhere(
-                                (line) => line.trim().isNotEmpty,
-                                orElse: () => 'No text',
-                              ),
-                              style: TextStyle(
-                                color: const Color(0xFFDFE1D3),
-                                fontFamily: 'Wix Madefor Text',
-                                fontSize: state.teleprompterFontSize,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                  ),
-                ),
+                _ScrollingPreview(state: state, onTap: onShowTextInput),
                 const SizedBox(height: 40),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -739,72 +773,6 @@ class _SettingsSheet extends StatelessWidget {
       },
     );
   }
-
-  void _showTextInputDialog(BuildContext context, CameraCubit cubit) {
-    final TextEditingController controller = TextEditingController(
-      text: cubit.state.originalTeleprompterText
-    );
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFFDFE1D3),
-          title: const Text(
-            'Enter Teleprompter Text',
-            style: TextStyle(
-              color: Color(0xFF364027),
-              fontFamily: 'Wix Madefor Text',
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: TextField(
-            controller: controller,
-            maxLines: 8,
-            decoration: const InputDecoration(
-              hintText: 'Paste your text here...',
-              border: OutlineInputBorder(),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF73AE50)),
-              ),
-            ),
-            style: const TextStyle(
-              color: Color(0xFF364027),
-              fontFamily: 'Wix Madefor Text',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Color(0xFF364027),
-                  fontFamily: 'Wix Madefor Text',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                cubit.setTeleprompterText(controller.text);
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Save',
-                style: TextStyle(
-                  color: Color(0xFF73AE50),
-                  fontFamily: 'Wix Madefor Text',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class _SizeOption extends StatelessWidget {
@@ -831,6 +799,131 @@ class _SizeOption extends StatelessWidget {
           letterSpacing: -0.03 * (size / 16),
         ),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+class _ScrollingPreview extends StatefulWidget {
+  final CameraState state;
+  final VoidCallback onTap;
+
+  const _ScrollingPreview({required this.state, required this.onTap});
+
+  @override
+  State<_ScrollingPreview> createState() => _ScrollingPreviewState();
+}
+
+class _ScrollingPreviewState extends State<_ScrollingPreview> with TickerProviderStateMixin {
+  int _currentLineIndex = 0;
+  Timer? _lineTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startScrolling();
+  }
+
+  @override
+  void didUpdateWidget(_ScrollingPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.teleprompterScrollSpeed != widget.state.teleprompterScrollSpeed ||
+        oldWidget.state.teleprompterText != widget.state.teleprompterText) {
+      _restartScrolling();
+    }
+  }
+
+  @override
+  void dispose() {
+    _lineTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startScrolling() {
+    _lineTimer?.cancel();
+    _currentLineIndex = 0;
+    _scrollToNextLine();
+  }
+
+  void _restartScrolling() {
+    _lineTimer?.cancel();
+    _currentLineIndex = 0;
+    _scrollToNextLine();
+  }
+
+  void _scrollToNextLine() {
+    final lines = widget.state.teleprompterText == 'No text' 
+        ? ['No text']
+        : widget.state.teleprompterText.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    
+    if (lines.isEmpty || lines.length == 1) return;
+
+    final lineDuration = Duration(milliseconds: (3000 / widget.state.teleprompterScrollSpeed).round());
+
+    _lineTimer = Timer(lineDuration, () {
+      if (mounted) {
+        setState(() {
+          _currentLineIndex = (_currentLineIndex + 1) % lines.length;
+        });
+        _scrollToNextLine();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = widget.state.teleprompterText == 'No text' 
+        ? ['No text']
+        : widget.state.teleprompterText.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    final currentLine = lines.isEmpty ? 'No text' : lines[_currentLineIndex];
+
+    return Opacity(
+      opacity: widget.state.teleprompterOpacity,
+      child: Container(
+        height: 100, // Fixed height for preview
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF364027),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: widget.state.teleprompterText.isEmpty || widget.state.teleprompterText == 'No text'
+            ? ElevatedButton(
+                onPressed: widget.onTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF73AE50),
+                  foregroundColor: const Color(0xFFDFE1D3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: const Text(
+                  'Add text',
+                  style: TextStyle(
+                    fontFamily: 'Wix Madefor Text',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : GestureDetector(
+                onTap: widget.onTap,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: Text(
+                    currentLine,
+                    key: ValueKey<String>(currentLine),
+                    style: TextStyle(
+                      color: const Color(0xFFDFE1D3),
+                      fontFamily: 'Wix Madefor Text',
+                      fontSize: widget.state.teleprompterFontSize,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.02 * (widget.state.teleprompterFontSize / 16),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
       ),
     );
   }
