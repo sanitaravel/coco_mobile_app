@@ -188,15 +188,38 @@ class Dashboard extends StatelessWidget {
               builder: (context, state) {
                 final closestTask = context.read<TasksCubit>().getClosestTask();
                 if (closestTask != null) {
-                  final formattedDate = '${closestTask.dueDate.day.toString().padLeft(2, '0')}.${closestTask.dueDate.month.toString().padLeft(2, '0')}.${closestTask.dueDate.year}';
                   return TaskCard(
-                    title: closestTask.title,
-                    subtitle: '${closestTask.subtitle} - Due: $formattedDate',
+                    task: closestTask,
                   );
                 } else {
-                  return TaskCard(
-                    title: 'No upcoming tasks',
-                    subtitle: 'All tasks completed!',
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFeeefe4),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const ListTile(
+                      title: Text(
+                        'No upcoming tasks',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 24,
+                          height: 1.0,
+                          letterSpacing: -0.01,
+                          color: Color(0xFF3D402E),
+                        ),
+                      ),
+                      subtitle: Text(
+                        'All tasks completed!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          height: 16 / 14,
+                          color: Color(0xFFA9AD90),
+                        ),
+                      ),
+                    ),
                   );
                 }
               },

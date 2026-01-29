@@ -80,10 +80,8 @@ class Calendar extends StatelessWidget {
                             itemCount: upcomingTasks.length,
                             itemBuilder: (context, index) {
                               final task = upcomingTasks[index];
-                              final formattedDate = '${task.dueDate.day.toString().padLeft(2, '0')}.${task.dueDate.month.toString().padLeft(2, '0')}.${task.dueDate.year}';
                               return TaskCard(
-                                title: task.title,
-                                subtitle: '${task.subtitle} - Due: $formattedDate',
+                                task: task,
                               );
                             },
                           ),

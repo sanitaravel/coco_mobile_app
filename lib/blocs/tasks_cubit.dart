@@ -33,18 +33,21 @@ class TasksCubit extends Cubit<TasksState> {
         id: '1',
         title: 'Complete project review',
         subtitle: 'Review the latest project updates and provide feedback',
+        description: 'Conduct a thorough review of the latest project updates, including code changes, documentation updates, and feature implementations. Provide detailed feedback to the development team on areas for improvement and potential issues.',
         dueDate: DateTime(2026, 1, 11),
       ),
       Task(
         id: '2',
         title: 'Prepare presentation',
         subtitle: 'Create slides for the quarterly meeting',
+        description: 'Create comprehensive slides for the quarterly business meeting. Include key performance metrics, project milestones, upcoming goals, and any challenges that need to be addressed.',
         dueDate: DateTime(2026, 1, 29),
       ),
       Task(
         id: '3',
         title: 'Update documentation',
         subtitle: 'Update API documentation with new endpoints',
+        description: 'Update the API documentation to include the newly implemented endpoints. Ensure all parameters, response formats, and error codes are properly documented with examples.',
         dueDate: DateTime(2026, 2, 5),
       ),
     ];
