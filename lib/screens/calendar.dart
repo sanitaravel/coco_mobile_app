@@ -7,14 +7,14 @@ class Calendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: CalendarWidget(),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+      body: Container(
+        margin: const EdgeInsets.all(30.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: CalendarWidget(),
+            ),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -62,8 +62,8 @@ class Calendar extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -145,21 +145,19 @@ class CalendarWidget extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            monthName,
-            style: const TextStyle(
-              color: Color(0xFF3D402E),
-              fontFamily: 'WixMadeforText',
-              fontSize: 38,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.38,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          monthName,
+          style: const TextStyle(
+            color: Color(0xFF3D402E),
+            fontFamily: 'WixMadeforText',
+            fontSize: 38,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.38,
           ),
+        ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: weekdays.map((day) => Expanded(
@@ -183,7 +181,6 @@ class CalendarWidget extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
