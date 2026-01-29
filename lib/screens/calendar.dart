@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/calendar_cubit.dart';
 import '../blocs/tasks_cubit.dart';
 import '../widgets/task_card.dart';
+import '../widgets/add_task_dialog.dart';
 
 class Calendar extends StatelessWidget {
   const Calendar({super.key});
@@ -37,7 +38,16 @@ class Calendar extends StatelessWidget {
                         ),
                         const Spacer(),
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (BuildContext context) {
+                                return const AddTaskDialog();
+                              },
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             shape: const CircleBorder(),
                             backgroundColor: const Color(0xFF73AE50),
