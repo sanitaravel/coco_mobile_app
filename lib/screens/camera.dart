@@ -39,6 +39,7 @@ class CameraState {
   final int selectedCameraIndex;
   final String teleprompterText;
   final double teleprompterFontSize;
+  final double teleprompterOpacity;
 
   const CameraState({
     this.isReady = false,
@@ -48,6 +49,7 @@ class CameraState {
     this.selectedCameraIndex = 0,
     this.teleprompterText = 'No text',
     this.teleprompterFontSize = 32.0,
+    this.teleprompterOpacity = 0.6,
   });
 
   CameraState copyWith({
@@ -58,6 +60,7 @@ class CameraState {
     int? selectedCameraIndex,
     String? teleprompterText,
     double? teleprompterFontSize,
+    double? teleprompterOpacity,
   }) {
     return CameraState(
       isReady: isReady ?? this.isReady,
@@ -67,6 +70,7 @@ class CameraState {
       selectedCameraIndex: selectedCameraIndex ?? this.selectedCameraIndex,
       teleprompterText: teleprompterText ?? this.teleprompterText,
       teleprompterFontSize: teleprompterFontSize ?? this.teleprompterFontSize,
+      teleprompterOpacity: teleprompterOpacity ?? this.teleprompterOpacity,
     );
   }
 }
@@ -132,6 +136,10 @@ class CameraCubit extends Cubit<CameraState> {
 
   void setTeleprompterFontSize(double size) {
     emit(state.copyWith(teleprompterFontSize: size));
+  }
+
+  void setTeleprompterOpacity(double opacity) {
+    emit(state.copyWith(teleprompterOpacity: opacity));
   }
 
   Future<CaptureResult?> onShutterPressed() async {
@@ -222,7 +230,7 @@ class _CameraView extends StatelessWidget {
                 left: 20,
                 right: 20,
                 child: Opacity(
-                  opacity: 0.6,
+                  opacity: state.teleprompterOpacity,
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -376,6 +384,31 @@ class _SettingsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 const Text(
+                  'Opacity',
+                  style: TextStyle(
+                    color: Color(0xFF364027),
+                    fontFamily: 'Wix Madefor Text',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w500,
+                    height: 0.75,
+                    letterSpacing: -0.32,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Slider(
+                  value: state.teleprompterOpacity,
+                  min: 0.0,
+                  max: 1.0,
+                  divisions: 10,
+                  activeColor: const Color(0xFF73AE50),
+                  inactiveColor: const Color(0xFF364027).withOpacity(0.3),
+                  onChanged: (value) {
+                    cubit.setTeleprompterOpacity(value);
+                  },
+                ),
+                const SizedBox(height: 40),
+                const Text(
                   'Preview',
                   style: TextStyle(
                     color: Color(0xFF364027),
@@ -388,22 +421,25 @@ class _SettingsSheet extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF364027),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'Hello',
-                    style: TextStyle(
-                      color: const Color(0xFFDFE1D3),
-                      fontFamily: 'Wix Madefor Text',
-                      fontSize: state.teleprompterFontSize,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                Opacity(
+                  opacity: state.teleprompterOpacity,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF364027),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    textAlign: TextAlign.center,
+                    child: Text(
+                      'Hello',
+                      style: TextStyle(
+                        color: const Color(0xFFDFE1D3),
+                        fontFamily: 'Wix Madefor Text',
+                        fontSize: state.teleprompterFontSize,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
