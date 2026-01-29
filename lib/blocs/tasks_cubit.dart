@@ -31,23 +31,44 @@ class TasksCubit extends Cubit<TasksState> {
     final tasks = [
       Task(
         id: '1',
-        title: 'Complete project review',
-        subtitle: 'Review the latest project updates and provide feedback',
-        description: 'Conduct a thorough review of the latest project updates, including code changes, documentation updates, and feature implementations. Provide detailed feedback to the development team on areas for improvement and potential issues.',
+        title: 'Film a tutorial',
+        subtitle: 'Create a cupcake making tutorial video',
+        description: 'Cupcake making',
+        steps: [
+          'Write a Script',
+          'Organize Filming Location',
+          'Practice the Script',
+          'Record the Video'
+        ],
+        completedSteps: [false, false, false, false],
         dueDate: DateTime(2026, 1, 11),
       ),
       Task(
         id: '2',
-        title: 'Prepare presentation',
-        subtitle: 'Create slides for the quarterly meeting',
-        description: 'Create comprehensive slides for the quarterly business meeting. Include key performance metrics, project milestones, upcoming goals, and any challenges that need to be addressed.',
+        title: 'Film a tutorial',
+        subtitle: 'Create a cupcake making tutorial video',
+        description: 'Cupcake making',
+        steps: [
+          'Write a Script',
+          'Organize Filming Location',
+          'Practice the Script',
+          'Record the Video'
+        ],
+        completedSteps: [false, false, false, false],
         dueDate: DateTime(2026, 1, 29),
       ),
       Task(
         id: '3',
-        title: 'Update documentation',
-        subtitle: 'Update API documentation with new endpoints',
-        description: 'Update the API documentation to include the newly implemented endpoints. Ensure all parameters, response formats, and error codes are properly documented with examples.',
+        title: 'Film a tutorial',
+        subtitle: 'Create a cupcake making tutorial video',
+        description: 'Cupcake making',
+        steps: [
+          'Write a Script',
+          'Organize Filming Location',
+          'Practice the Script',
+          'Record the Video'
+        ],
+        completedSteps: [false, false, false, false],
         dueDate: DateTime(2026, 2, 5),
       ),
     ];
@@ -76,8 +97,23 @@ class TasksCubit extends Cubit<TasksState> {
     emit(state.copyWith(tasks: updatedTasks));
   }
 
-  void deleteTask(String taskId) {
-    final updatedTasks = state.tasks.where((task) => task.id != taskId).toList();
+  void toggleTaskStep(String taskId, int stepIndex) {
+    final updatedTasks = state.tasks.map((task) {
+      if (task.id == taskId) {
+        final currentCompletedSteps = task.safeCompletedSteps;
+        final updatedCompletedSteps = List<bool>.from(currentCompletedSteps);
+        updatedCompletedSteps[stepIndex] = !updatedCompletedSteps[stepIndex];
+        
+        // Check if all steps are now completed
+        final allStepsCompleted = updatedCompletedSteps.every((step) => step);
+        
+        return task.copyWith(
+          completedSteps: updatedCompletedSteps,
+          isCompleted: allStepsCompleted,
+        );
+      }
+      return task;
+    }).toList();
     emit(state.copyWith(tasks: updatedTasks));
   }
 

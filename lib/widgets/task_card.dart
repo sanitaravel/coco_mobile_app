@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/task_model.dart';
+import '../blocs/tasks_cubit.dart';
 
 class TaskCard extends StatefulWidget {
   final Task task;
@@ -64,13 +66,22 @@ class TaskCardState extends State<TaskCard> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
+        return BlocBuilder<TasksCubit, TasksState>(
+          builder: (context, state) {
+            // Find the current task from the updated state
+            final currentTask = state.tasks.firstWhere(
+              (task) => task.id == widget.task.id,
+              orElse: () => widget.task,
+            );
+            final formattedDate = '${currentTask.dueDate.day.toString().padLeft(2, '0')}.${currentTask.dueDate.month.toString().padLeft(2, '0')}.${currentTask.dueDate.year}';
+            
+            return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
           decoration: const BoxDecoration(
-            color: Color(0xFFeeefe4),
+            color: Color(0xFFDFE1D3),
             borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+              topLeft: Radius.circular(10),
+              topRight: Radius.circular(10),
             ),
           ),
           child: Column(
@@ -86,56 +97,104 @@ class TaskCardState extends State<TaskCard> {
                 ),
               ),
               Expanded(
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Task name
                       Text(
-                        widget.task.title,
+                        currentTask.title,
                         style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 28,
                           color: Color(0xFF3D402E),
+                          fontFamily: 'WixMadeforText',
+                          fontSize: 38,
+                          fontStyle: FontStyle.normal,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.02375 * 16, // Convert rem to pixels approximately
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        widget.task.subtitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          color: Color(0xFFA9AD90),
+                      const SizedBox(height: 2),
+                      
+                      // Description
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Description',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                          color: Color(0xFF3D402E),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Text(
-                            widget.task.description,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              height: 1.5,
-                              color: Color(0xFF3D402E),
-                            ),
+                        child: Text(
+                          currentTask.description,
+                          style: const TextStyle(
+                            color: Color(0xFF3D402E),
+                            fontFamily: 'WixMadeforText',
+                            fontSize: 32,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.w600,
+                            height: 1.5,
+                            letterSpacing: -0.02 * 16,
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      
+                      // Expiration date
+                      Text(
+                        'Until $formattedDate',
+                        style: const TextStyle(
+                          color: Color(0xFFA9AD90),
+                          fontFamily: 'WixMadeforText',
+                          fontSize: 24,
+                          fontStyle: FontStyle.normal,
+                          fontWeight: FontWeight.w600,
+                          height: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      
+                      // Steps
+                      ...currentTask.safeSteps.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final step = entry.value;
+                        final isCompleted = currentTask.safeCompletedSteps[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Row(
+                            children: [
+                              CircularCheckbox(
+                                isSelected: isCompleted,
+                                onTap: () {
+                                  context.read<TasksCubit>().toggleTaskStep(currentTask.id, index);
+                                },
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  step,
+                                  style: TextStyle(
+                                    color: const Color(0xFF364027),
+                                    fontFamily: 'WixMadeforText',
+                                    fontSize: 20,
+                                    fontStyle: FontStyle.normal,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1,
+                                    decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                    decorationColor: const Color(0xFF364027),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),
               ),
             ],
           ),
+        );
+          },
         );
       },
     );
@@ -172,6 +231,41 @@ class RadioButton extends StatelessWidget {
               color: Color(0xFFA9AD90),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class CircularCheckbox extends StatelessWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const CircularCheckbox({super.key, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected ? const Color(0xFFA9AD90) : const Color(0xFF364027),
+            width: 2,
+          ),
+          color: isSelected ? const Color(0xFFA9AD90) : Colors.transparent,
+        ),
+        child: Center(
+          child: isSelected
+              ? const Icon(
+                  Icons.check,
+                  color: Color(0xFFDFE1D3),
+                  size: 16,
+                )
+              : null,
         ),
       ),
     );
