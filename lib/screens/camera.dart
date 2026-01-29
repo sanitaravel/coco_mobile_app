@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -38,8 +39,10 @@ class CameraState {
   final CaptureMode mode;
   final int selectedCameraIndex;
   final String teleprompterText;
+  final String originalTeleprompterText;
   final double teleprompterFontSize;
   final double teleprompterOpacity;
+  final double teleprompterScrollSpeed;
 
   const CameraState({
     this.isReady = false,
@@ -48,8 +51,10 @@ class CameraState {
     this.mode = CaptureMode.photo,
     this.selectedCameraIndex = 0,
     this.teleprompterText = 'No text',
+    this.originalTeleprompterText = '',
     this.teleprompterFontSize = 32.0,
     this.teleprompterOpacity = 0.6,
+    this.teleprompterScrollSpeed = 1.0,
   });
 
   CameraState copyWith({
@@ -59,8 +64,10 @@ class CameraState {
     CaptureMode? mode,
     int? selectedCameraIndex,
     String? teleprompterText,
+    String? originalTeleprompterText,
     double? teleprompterFontSize,
     double? teleprompterOpacity,
+    double? teleprompterScrollSpeed,
   }) {
     return CameraState(
       isReady: isReady ?? this.isReady,
@@ -69,8 +76,10 @@ class CameraState {
       mode: mode ?? this.mode,
       selectedCameraIndex: selectedCameraIndex ?? this.selectedCameraIndex,
       teleprompterText: teleprompterText ?? this.teleprompterText,
+      originalTeleprompterText: originalTeleprompterText ?? this.originalTeleprompterText,
       teleprompterFontSize: teleprompterFontSize ?? this.teleprompterFontSize,
       teleprompterOpacity: teleprompterOpacity ?? this.teleprompterOpacity,
+      teleprompterScrollSpeed: teleprompterScrollSpeed ?? this.teleprompterScrollSpeed,
     );
   }
 }
@@ -131,15 +140,119 @@ class CameraCubit extends Cubit<CameraState> {
   }
 
   void setTeleprompterText(String text) {
-    emit(state.copyWith(teleprompterText: text));
+    final processedText = _processTeleprompterText(text);
+    emit(state.copyWith(
+      teleprompterText: processedText,
+      originalTeleprompterText: text,
+    ));
+  }
+
+  String _processTeleprompterText(String input, [double? fontSize]) {
+    final effectiveFontSize = fontSize ?? state.teleprompterFontSize;
+    
+    if (input.trim().isEmpty) return 'No text';
+
+    // Step 1: Trim and normalize whitespace
+    String processed = input.trim();
+
+    // Step 2: Normalize line breaks
+    processed = processed.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+    // Step 3: Remove excessive whitespace
+    processed = processed.replaceAll(RegExp(r' +'), ' ');
+
+    // Step 4: Split into lines and process each line
+    final lines = processed.split('\n');
+    final processedLines = <String>[];
+
+    for (final line in lines) {
+      if (line.trim().isEmpty) {
+        // Preserve empty lines (paragraph breaks)
+        processedLines.add('');
+        continue;
+      }
+
+      // Calculate max characters per line based on font size
+      int maxLength;
+      if (effectiveFontSize <= 32) {
+        maxLength = 30; // Small font
+      } else if (effectiveFontSize <= 48) {
+        maxLength = 20; // Medium font
+      } else {
+        maxLength = 7; // Large font
+      }
+
+      final chunks = _breakIntoChunks(line.trim(), maxLength: maxLength);
+      processedLines.addAll(chunks);
+    }
+
+    // Step 5: Remove consecutive empty lines (keep max 1)
+    final cleanedLines = <String>[];
+    bool lastWasEmpty = false;
+
+    for (final line in processedLines) {
+      if (line.isEmpty) {
+        if (!lastWasEmpty) {
+          cleanedLines.add(line);
+        }
+        lastWasEmpty = true;
+      } else {
+        cleanedLines.add(line);
+        lastWasEmpty = false;
+      }
+    }
+
+    return cleanedLines.join('\n').trim();
+  }
+
+  List<String> _breakIntoChunks(String text, {int maxLength = 50}) {
+    if (text.length <= maxLength) {
+      return [text];
+    }
+
+    final chunks = <String>[];
+    final words = text.split(' ');
+    final buffer = StringBuffer();
+
+    for (final word in words) {
+      if (buffer.isEmpty) {
+        buffer.write(word);
+      } else if (buffer.length + word.length + 1 <= maxLength) {
+        buffer.write(' $word');
+      } else {
+        // Current buffer is full, save it and start new one
+        chunks.add(buffer.toString());
+        buffer.clear();
+        buffer.write(word);
+      }
+    }
+
+    // Add remaining buffer
+    if (buffer.isNotEmpty) {
+      chunks.add(buffer.toString());
+    }
+
+    return chunks;
   }
 
   void setTeleprompterFontSize(double size) {
-    emit(state.copyWith(teleprompterFontSize: size));
+    // Use the original text to re-process with new font size
+    final originalText = state.originalTeleprompterText;
+    
+    if (originalText.isNotEmpty) {
+      final reprocessedText = _processTeleprompterText(originalText, size);
+      emit(state.copyWith(teleprompterText: reprocessedText, teleprompterFontSize: size));
+    } else {
+      emit(state.copyWith(teleprompterFontSize: size));
+    }
   }
 
   void setTeleprompterOpacity(double opacity) {
     emit(state.copyWith(teleprompterOpacity: opacity));
+  }
+
+  void setTeleprompterScrollSpeed(double speed) {
+    emit(state.copyWith(teleprompterScrollSpeed: speed));
   }
 
   Future<CaptureResult?> onShutterPressed() async {
@@ -176,11 +289,80 @@ class CameraCubit extends Cubit<CameraState> {
   }
 }
 
-class _CameraView extends StatelessWidget {
+class _CameraView extends StatefulWidget {
   const _CameraView();
+
+  @override
+  State<_CameraView> createState() => _CameraViewState();
+}
+
+class _CameraViewState extends State<_CameraView> with TickerProviderStateMixin {
 
   static const _overlay = Color(0xB34A5A3B); // olive-ish translucent
   static const _text = Colors.white;
+
+  ScrollController? _scrollController;
+  AnimationController? _animationController;
+  bool _isScrolling = false;
+  int _currentLineIndex = 0;
+  Timer? _lineTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController?.dispose();
+    _animationController?.dispose();
+    _lineTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startAutoScroll(CameraState state) {
+    _lineTimer?.cancel();
+    _currentLineIndex = 0;
+    _isScrolling = true;
+
+    final lines = state.teleprompterText.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    
+    if (lines.isEmpty) {
+      _isScrolling = false;
+      return;
+    }
+
+    final lineDuration = Duration(milliseconds: (3000 / state.teleprompterScrollSpeed).round());
+
+    void showNextLine() {
+      if (_currentLineIndex >= lines.length - 1) {
+        // Reached the end, stop
+        _isScrolling = false;
+        return;
+      }
+
+      _currentLineIndex++;
+      setState(() {}); // Trigger rebuild to show new line
+
+      _lineTimer = Timer(lineDuration, showNextLine);
+    }
+
+    // Start with first line
+    setState(() {});
+    _lineTimer = Timer(lineDuration, showNextLine);
+  }
+
+  void _stopAutoScroll() {
+    _lineTimer?.cancel();
+    _isScrolling = false;
+    _currentLineIndex = 0;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +378,21 @@ class _CameraView extends StatelessWidget {
         builder: (context, state) {
           final cubit = context.read<CameraCubit>();
           final ctrl = cubit.controller;
+
+          // Start auto-scroll when text changes
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (state.teleprompterText != 'No text' && !_isScrolling) {
+              _startAutoScroll(state);
+            } else if (state.teleprompterText == 'No text') {
+              _stopAutoScroll();
+            }
+          });
+
+          // Get current line to display
+          final lines = state.teleprompterText == 'No text' 
+              ? ['No text'] 
+              : state.teleprompterText.split('\n').where((line) => line.trim().isNotEmpty).toList();
+          final currentLine = lines.isEmpty ? 'No text' : lines[_currentLineIndex.clamp(0, lines.length - 1)];
 
           return Stack(
             children: [
@@ -232,21 +429,24 @@ class _CameraView extends StatelessWidget {
                 child: Opacity(
                   opacity: state.teleprompterOpacity,
                   child: Container(
+                    height: 200, // Fixed height for consistency
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: const Color(0xFF364027),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      state.teleprompterText ?? 'No text',
-                      style: TextStyle(
-                        color: const Color(0xFFDFE1D3),
-                        fontFamily: 'Wix Madefor Text',
-                        fontSize: state.teleprompterFontSize,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                    child: Center(
+                      child: Text(
+                        currentLine,
+                        style: TextStyle(
+                          color: const Color(0xFFDFE1D3),
+                          fontFamily: 'Wix Madefor Text',
+                          fontSize: state.teleprompterFontSize,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
@@ -409,6 +609,31 @@ class _SettingsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 const Text(
+                  'Scroll Speed',
+                  style: TextStyle(
+                    color: Color(0xFF364027),
+                    fontFamily: 'Wix Madefor Text',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w500,
+                    height: 0.75,
+                    letterSpacing: -0.32,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Slider(
+                  value: state.teleprompterScrollSpeed,
+                  min: 0.5,
+                  max: 3.0,
+                  divisions: 10,
+                  activeColor: const Color(0xFF73AE50),
+                  inactiveColor: const Color(0xFF364027).withOpacity(0.3),
+                  onChanged: (value) {
+                    cubit.setTeleprompterScrollSpeed(value);
+                  },
+                ),
+                const SizedBox(height: 40),
+                const Text(
                   'Preview',
                   style: TextStyle(
                     color: Color(0xFF364027),
@@ -429,17 +654,43 @@ class _SettingsSheet extends StatelessWidget {
                       color: const Color(0xFF364027),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      'Hello',
-                      style: TextStyle(
-                        color: const Color(0xFFDFE1D3),
-                        fontFamily: 'Wix Madefor Text',
-                        fontSize: state.teleprompterFontSize,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    child: state.teleprompterText.isEmpty || state.teleprompterText == 'No text'
+                        ? ElevatedButton(
+                            onPressed: () => _showTextInputDialog(context, cubit),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF73AE50),
+                              foregroundColor: const Color(0xFFDFE1D3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            child: const Text(
+                              'Add text',
+                              style: TextStyle(
+                                fontFamily: 'Wix Madefor Text',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          )
+                        : GestureDetector(
+                            onTap: () => _showTextInputDialog(context, cubit),
+                            child: Text(
+                              state.teleprompterText.split('\n').firstWhere(
+                                (line) => line.trim().isNotEmpty,
+                                orElse: () => 'No text',
+                              ),
+                              style: TextStyle(
+                                color: const Color(0xFFDFE1D3),
+                                fontFamily: 'Wix Madefor Text',
+                                fontSize: state.teleprompterFontSize,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -447,7 +698,12 @@ class _SettingsSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () => cubit.setTeleprompterFontSize(48.0),
+                      onTap: () {
+                        cubit.setTeleprompterText('');
+                        cubit.setTeleprompterFontSize(48.0);
+                        cubit.setTeleprompterOpacity(0.6);
+                        cubit.setTeleprompterScrollSpeed(1.0);
+                      },
                       child: const Text(
                         'Reset',
                         style: TextStyle(
@@ -479,6 +735,72 @@ class _SettingsSheet extends StatelessWidget {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showTextInputDialog(BuildContext context, CameraCubit cubit) {
+    final TextEditingController controller = TextEditingController(
+      text: cubit.state.originalTeleprompterText
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFDFE1D3),
+          title: const Text(
+            'Enter Teleprompter Text',
+            style: TextStyle(
+              color: Color(0xFF364027),
+              fontFamily: 'Wix Madefor Text',
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            maxLines: 8,
+            decoration: const InputDecoration(
+              hintText: 'Paste your text here...',
+              border: OutlineInputBorder(),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF73AE50)),
+              ),
+            ),
+            style: const TextStyle(
+              color: Color(0xFF364027),
+              fontFamily: 'Wix Madefor Text',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF364027),
+                  fontFamily: 'Wix Madefor Text',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                cubit.setTeleprompterText(controller.text);
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Save',
+                style: TextStyle(
+                  color: Color(0xFF73AE50),
+                  fontFamily: 'Wix Madefor Text',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
