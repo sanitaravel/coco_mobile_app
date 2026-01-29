@@ -37,6 +37,8 @@ class CameraState {
   final String? error;
   final CaptureMode mode;
   final int selectedCameraIndex;
+  final String teleprompterText;
+  final double teleprompterFontSize;
 
   const CameraState({
     this.isReady = false,
@@ -44,6 +46,8 @@ class CameraState {
     this.error,
     this.mode = CaptureMode.photo,
     this.selectedCameraIndex = 0,
+    this.teleprompterText = 'No text',
+    this.teleprompterFontSize = 32.0,
   });
 
   CameraState copyWith({
@@ -52,6 +56,8 @@ class CameraState {
     String? error,
     CaptureMode? mode,
     int? selectedCameraIndex,
+    String? teleprompterText,
+    double? teleprompterFontSize,
   }) {
     return CameraState(
       isReady: isReady ?? this.isReady,
@@ -59,6 +65,8 @@ class CameraState {
       error: error,
       mode: mode ?? this.mode,
       selectedCameraIndex: selectedCameraIndex ?? this.selectedCameraIndex,
+      teleprompterText: teleprompterText ?? this.teleprompterText,
+      teleprompterFontSize: teleprompterFontSize ?? this.teleprompterFontSize,
     );
   }
 }
@@ -116,6 +124,14 @@ class CameraCubit extends Cubit<CameraState> {
   void setMode(CaptureMode mode) {
     if (state.isRecording) return;
     emit(state.copyWith(mode: mode));
+  }
+
+  void setTeleprompterText(String text) {
+    emit(state.copyWith(teleprompterText: text));
+  }
+
+  void setTeleprompterFontSize(double size) {
+    emit(state.copyWith(teleprompterFontSize: size));
   }
 
   Future<CaptureResult?> onShutterPressed() async {
@@ -200,6 +216,34 @@ class _CameraView extends StatelessWidget {
                 ),
               ),
 
+              // Teleprompter
+              Positioned(
+                top: 80,
+                left: 20,
+                right: 20,
+                child: Opacity(
+                  opacity: 0.6,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF364027),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      state.teleprompterText ?? 'No text',
+                      style: TextStyle(
+                        color: const Color(0xFFDFE1D3),
+                        fontFamily: 'Wix Madefor Text',
+                        fontSize: state.teleprompterFontSize,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+
               // Bottom controls bar
               Align(
                 alignment: Alignment.bottomCenter,
@@ -236,8 +280,7 @@ class _CameraView extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.settings, size: 34),
                           color: _text,
-                          onPressed: () {// optional: open settings sheet
-                          },
+                          onPressed: () => _showSettings(context),
                         ),
                       ],
                     ),
@@ -264,6 +307,172 @@ class _CameraView extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showSettings(BuildContext context) {
+    final cubit = context.read<CameraCubit>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _SettingsSheet(cubit: cubit),
+    );
+  }
+}
+
+class _SettingsSheet extends StatelessWidget {
+  final CameraCubit cubit;
+
+  const _SettingsSheet({required this.cubit});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CameraCubit, CameraState>(
+      bloc: cubit,
+      builder: (context, state) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          child: Container(
+            padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 8),
+            decoration: const BoxDecoration(
+              color: Color(0xFFDFE1D3),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                const Text(
+                  'Text Size',
+                  style: TextStyle(
+                    color: Color(0xFF364027),
+                    fontFamily: 'Wix Madefor Text',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w500,
+                    height: 0.75,
+                    letterSpacing: -0.32,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _SizeOption(size: 32, cubit: cubit),
+                    _SizeOption(size: 48, cubit: cubit),
+                    _SizeOption(size: 64, cubit: cubit),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                const Text(
+                  'Preview',
+                  style: TextStyle(
+                    color: Color(0xFF364027),
+                    fontFamily: 'Wix Madefor Text',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w500,
+                    height: 0.75,
+                    letterSpacing: -0.32,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF364027),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'Hello',
+                    style: TextStyle(
+                      color: const Color(0xFFDFE1D3),
+                      fontFamily: 'Wix Madefor Text',
+                      fontSize: state.teleprompterFontSize,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.02 * (state.teleprompterFontSize / 16),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => cubit.setTeleprompterFontSize(48.0),
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(
+                          color: Color(0xFF364027),
+                          fontFamily: 'Wix Madefor Text',
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          height: 1.0,
+                          letterSpacing: -0.24,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: Color(0xFF364027),
+                          fontFamily: 'Wix Madefor Text',
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          height: 1.0,
+                          letterSpacing: -0.24,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SizeOption extends StatelessWidget {
+  final double size;
+  final CameraCubit cubit;
+
+  const _SizeOption({required this.size, required this.cubit});
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = cubit.state.teleprompterFontSize == size;
+    return GestureDetector(
+      onTap: () {
+        cubit.setTeleprompterFontSize(size);
+      },
+      child: Text(
+        'A',
+        style: TextStyle(
+          color: isActive ? const Color(0xFF73AE50) : const Color(0xFF364027),
+          fontFamily: 'Wix Madefor Text',
+          fontSize: size,
+          fontWeight: FontWeight.w600,
+          height: 24 / size,
+          letterSpacing: -0.03 * (size / 16),
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }
