@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/task_card.dart';
 import '../widgets/social_card.dart';
 import '../widgets/social_details.dart';
+import '../blocs/tasks_cubit.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -182,9 +184,22 @@ class Dashboard extends StatelessWidget {
                 color: const Color(0xFF3D402E),
               ),
             ),
-            TaskCard(
-              title: 'Current Task Title',
-              subtitle: 'Subtitle for the current task',
+            BlocBuilder<TasksCubit, TasksState>(
+              builder: (context, state) {
+                final closestTask = context.read<TasksCubit>().getClosestTask();
+                if (closestTask != null) {
+                  final formattedDate = '${closestTask.dueDate.day.toString().padLeft(2, '0')}.${closestTask.dueDate.month.toString().padLeft(2, '0')}.${closestTask.dueDate.year}';
+                  return TaskCard(
+                    title: closestTask.title,
+                    subtitle: '${closestTask.subtitle} - Due: $formattedDate',
+                  );
+                } else {
+                  return TaskCard(
+                    title: 'No upcoming tasks',
+                    subtitle: 'All tasks completed!',
+                  );
+                }
+              },
             ),
             const SizedBox(height: 32),
             Text(

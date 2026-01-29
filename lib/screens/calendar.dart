@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/calendar_cubit.dart';
+import '../blocs/tasks_cubit.dart';
+import '../widgets/task_card.dart';
 
 class Calendar extends StatelessWidget {
   const Calendar({super.key});
@@ -51,17 +53,42 @@ class Calendar extends StatelessWidget {
                       ],
                     ),
                     // Task list placeholder
-                    Expanded(
-                      child: ListView(
-                        children: const [
-                          ListTile(
-                            title: Text('Task on 11 Jan 2026'),
+                    BlocBuilder<TasksCubit, TasksState>(
+                      builder: (context, state) {
+                        final now = DateTime.now();
+                        final today = DateTime(now.year, now.month, now.day);
+                        final upcomingTasks = state.tasks
+                            .where((task) => !task.isCompleted && !task.dueDate.isBefore(today))
+                            .toList()
+                          ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+
+                        if (upcomingTasks.isEmpty) {
+                          return Expanded(
+                            child: Center(
+                              child: Text(
+                                'No upcoming tasks',
+                                style: TextStyle(
+                                  color: Color(0xFFA9AD90),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return Expanded(
+                          child: ListView.builder(
+                            itemCount: upcomingTasks.length,
+                            itemBuilder: (context, index) {
+                              final task = upcomingTasks[index];
+                              final formattedDate = '${task.dueDate.day.toString().padLeft(2, '0')}.${task.dueDate.month.toString().padLeft(2, '0')}.${task.dueDate.year}';
+                              return TaskCard(
+                                title: task.title,
+                                subtitle: '${task.subtitle} - Due: $formattedDate',
+                              );
+                            },
                           ),
-                          ListTile(
-                            title: Text('Task on 29 Jan 2026'),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -80,48 +107,47 @@ class CalendarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CalendarCubit, CalendarState>(
-      builder: (context, state) {
-        final pageController = PageController(initialPage: 1); // Start at current month
+      builder: (context, calendarState) {
+        return BlocBuilder<TasksCubit, TasksState>(
+          builder: (context, tasksState) {
+            final pageController = PageController(initialPage: 1); // Start at current month
 
-        return PageView.builder(
-          controller: pageController,
-          onPageChanged: (pageIndex) {
-            if (pageIndex == 0) {
-              // Swiped to previous month
-              context.read<CalendarCubit>().previousMonth();
-              pageController.jumpToPage(1); // Reset to middle page
-            } else if (pageIndex == 2) {
-              // Swiped to next month
-              context.read<CalendarCubit>().nextMonth();
-              pageController.jumpToPage(1); // Reset to middle page
-            }
-          },
-          itemBuilder: (context, pageIndex) {
-            DateTime displayMonth;
-            if (pageIndex == 0) {
-              // Previous month
-              displayMonth = DateTime(state.currentMonth.year, state.currentMonth.month - 1);
-            } else if (pageIndex == 2) {
-              // Next month
-              displayMonth = DateTime(state.currentMonth.year, state.currentMonth.month + 1);
-            } else {
-              // Current month
-              displayMonth = state.currentMonth;
-            }
+            return PageView.builder(
+              controller: pageController,
+              onPageChanged: (pageIndex) {
+                if (pageIndex == 0) {
+                  // Swiped to previous month
+                  context.read<CalendarCubit>().previousMonth();
+                  pageController.jumpToPage(1); // Reset to middle page
+                } else if (pageIndex == 2) {
+                  // Swiped to next month
+                  context.read<CalendarCubit>().nextMonth();
+                  pageController.jumpToPage(1); // Reset to middle page
+                }
+              },
+              itemBuilder: (context, pageIndex) {
+                DateTime displayMonth;
+                if (pageIndex == 0) {
+                  // Previous month
+                  displayMonth = DateTime(calendarState.currentMonth.year, calendarState.currentMonth.month - 1);
+                } else if (pageIndex == 2) {
+                  // Next month
+                  displayMonth = DateTime(calendarState.currentMonth.year, calendarState.currentMonth.month + 1);
+                } else {
+                  // Current month
+                  displayMonth = calendarState.currentMonth;
+                }
 
-            return _buildCalendarForMonth(displayMonth);
+                return _buildCalendarForMonth(displayMonth, context.read<TasksCubit>());
+              },
+            );
           },
         );
       },
     );
   }
 
-  Widget _buildCalendarForMonth(DateTime month) {
-    List<DateTime> taskDates = [
-      DateTime(2026, 1, 11),
-      DateTime(2026, 1, 29),
-    ];
-
+  Widget _buildCalendarForMonth(DateTime month, TasksCubit tasksCubit) {
     const List<String> monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
@@ -161,7 +187,8 @@ class CalendarWidget extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.w500,
             );
-      bool hasTask = taskDates.contains(dayDate);
+      List tasksForDate = tasksCubit.getTasksForDate(dayDate);
+      bool hasTask = tasksForDate.isNotEmpty;
       Widget dayWidget = Column(
         mainAxisSize: MainAxisSize.min,
         children: [

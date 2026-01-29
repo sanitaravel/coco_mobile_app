@@ -6,6 +6,7 @@ import 'screens/tutorials.dart';
 import 'screens/media.dart';
 import 'screens/calendar.dart';
 import 'blocs/navigation_bloc.dart';
+import 'blocs/tasks_cubit.dart';
 
 void main() {
   runApp(const MainApp());
@@ -37,8 +38,15 @@ class MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<NavigationBloc>(
-      create: (_) => NavigationBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<NavigationBloc>(
+          create: (_) => NavigationBloc(),
+        ),
+        BlocProvider<TasksCubit>(
+          create: (_) => TasksCubit(),
+        ),
+      ],
       child: MaterialApp(
         theme: ThemeData(
           fontFamily: 'WixMadeforText',
