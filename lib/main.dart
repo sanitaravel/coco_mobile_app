@@ -48,6 +48,7 @@ class MainAppState extends State<MainApp> {
         ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           fontFamily: 'WixMadeforText',
           scaffoldBackgroundColor: Color(0xFFDFE1D3),
