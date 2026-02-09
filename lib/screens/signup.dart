@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -8,14 +9,16 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
@@ -69,9 +72,9 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               const SizedBox(height: 28),
 
-              // Name
+              // First & Last Name
               Text(
-                'Name',
+                'First Name',
                 style: TextStyle(
                   fontFamily: 'WixMadeforText',
                   fontWeight: FontWeight.w500,
@@ -81,7 +84,34 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               const SizedBox(height: 8),
               TextField(
-                controller: _nameController,
+                controller: _firstNameController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5),
+                    borderSide: const BorderSide(color: borderDark, width: 3),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5),
+                    borderSide: const BorderSide(color: borderDark, width: 3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Last Name',
+                style: TextStyle(
+                  fontFamily: 'WixMadeforText',
+                  fontWeight: FontWeight.w500,
+                  color: darkText,
+                  fontSize: 20,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _lastNameController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
@@ -191,8 +221,48 @@ class _SignUpPageState extends State<SignUpPage> {
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: implement sign up
+                  onPressed: () async {
+                    final first = _firstNameController.text.trim();
+                    final last = _lastNameController.text.trim();
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+                    final confirm = _confirmController.text.trim();
+                    if (first.isEmpty || last.isEmpty || email.isEmpty || password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please fill in all fields')),
+                      );
+                      return;
+                    }
+                    if (password != confirm) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Passwords do not match')),
+                      );
+                      return;
+                    }
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => Center(child: CircularProgressIndicator()),
+                    );
+                    try {
+                      final auth = AuthService();
+                      await auth.signUp(
+                        _firstNameController.text.trim(),
+                        _lastNameController.text.trim(),
+                        email,
+                        password,
+                      );
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Account created successfully')),
+                      );
+                      Navigator.of(context).popUntil((r) => r.isFirst);
+                    } on Exception catch (e) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Sign up failed: ${e.toString()}')),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentGreen,
@@ -227,6 +297,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                 ),
+              
               ),
             ],
           ),

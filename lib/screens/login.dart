@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signup.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -154,8 +155,34 @@ class _LoginPageState extends State<LoginPage> {
                     width: 161,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: perform login
+                      onPressed: () async {
+                        final email = _emailController.text.trim();
+                        final password = _passwordController.text.trim();
+                        if (email.isEmpty || password.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Please enter email and password')),
+                          );
+                          return;
+                        }
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => Center(child: CircularProgressIndicator()),
+                        );
+                        try {
+                          final auth = AuthService();
+                          await auth.signIn(email, password);
+                          Navigator.of(context).pop(); // remove progress
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Signed in successfully')),
+                          );
+                          Navigator.of(context).popUntil((r) => r.isFirst);
+                        } on Exception catch (e) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Sign in failed: ${e.toString()}')),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: accentGreen,
