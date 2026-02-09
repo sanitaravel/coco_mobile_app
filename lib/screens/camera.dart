@@ -619,7 +619,7 @@ class _SettingsSheet extends StatelessWidget {
     return BlocBuilder<CameraCubit, CameraState>(
       bloc: cubit,
       builder: (context, state) {
-        return Container(
+        return SizedBox(
           height: MediaQuery.of(context).size.height * 0.75,
           child: Container(
             padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 8),
