@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/dashboard.dart';
 import 'screens/tutorials.dart';
@@ -108,9 +109,67 @@ class MainAppState extends State<MainApp> {
                         ),
                       ),
                       actions: [
-                        IconButton(
+                        PopupMenuButton<String>(
                           icon: const FaIcon(FontAwesomeIcons.gear),
-                          onPressed: () {},
+                          onSelected: (value) {
+                            if (value == 'logout') {
+                              context.read<AuthCubit>().signOut();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem<String>(
+                              enabled: false,
+                              child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                stream: FirebaseFirestore.instance.collection('users').doc(authState.user!.uid).snapshots(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return const SizedBox(width: 220, height: 64, child: Center(child: CircularProgressIndicator()));
+                                  }
+                                  final data = snapshot.data!.data() ?? {};
+                                  final fullName = (data['displayName'] as String?) ?? authState.user?.displayName ?? '';
+                                  final email = (data['email'] as String?) ?? authState.user?.email ?? '';
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        fullName,
+                                        style: const TextStyle(
+                                          fontFamily: 'WixMadeforText',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: Color(0xFF000000),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        email,
+                                        style: const TextStyle(
+                                          fontFamily: 'WixMadeforText',
+                                          fontSize: 12,
+                                          color: Color(0xFF6B6B6B),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem<String>(
+                              value: 'logout',
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.logout, color: Color(0xFF73AE50)),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Log out',
+                                    style: TextStyle(color: Color(0xFF73AE50)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                       backgroundColor: Colors.transparent,
