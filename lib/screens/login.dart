@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'signup.dart';
-import '../services/auth_service.dart';
+import '../blocs/auth_cubit.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -31,11 +32,11 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: bgColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Center(
                 child: SizedBox(
                   width: 120,
@@ -46,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Center(
                 child: Text(
                   'Launch your social\nmedia journey!',
@@ -60,25 +61,25 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 40),
-
-              // Email label + field
-              Text(
+              const SizedBox(height: 40),
+              const Text(
                 'Email',
                 style: TextStyle(
                   fontFamily: 'WixMadeforText',
                   fontWeight: FontWeight.w500,
-                  color: darkText,
                   fontSize: 24,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5),
                     borderSide: BorderSide(color: borderDark, width: 3),
@@ -89,26 +90,26 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 24),
-
-              // Password label + field
-              Text(
+              const SizedBox(height: 24),
+              const Text(
                 'Password',
                 style: TextStyle(
                   fontFamily: 'WixMadeforText',
                   fontWeight: FontWeight.w500,
-                  color: darkText,
                   fontSize: 24,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5),
                     borderSide: BorderSide(color: borderDark, width: 3),
@@ -119,8 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Row(
                 children: [
                   Expanded(
@@ -128,61 +128,46 @@ class _LoginPageState extends State<LoginPage> {
                       alignment: Alignment.centerLeft,
                       child: TextButton(
                         onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const SignUpPage()),
-                            );
-                          },
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SignUpPage(),
+                            ),
+                          );
+                        },
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: Size(0, 0),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: Text(
+                        child: const Text(
                           'Sign Up',
                           style: TextStyle(
                             fontFamily: 'WixMadeforText',
                             fontWeight: FontWeight.w500,
-                            color: accentGreen,
                             fontSize: 32,
+                            color: Color(0xFF73AE50),
                           ),
                         ),
                       ),
                     ),
                   ),
-
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   SizedBox(
                     width: 161,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () async {
+                      onPressed: () {
                         final email = _emailController.text.trim();
                         final password = _passwordController.text.trim();
                         if (email.isEmpty || password.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Please enter email and password')),
+                            const SnackBar(
+                              content: Text('Please enter email and password'),
+                            ),
                           );
                           return;
                         }
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => Center(child: CircularProgressIndicator()),
-                        );
-                        try {
-                          final auth = AuthService();
-                          await auth.signIn(email, password);
-                          Navigator.of(context).pop(); // remove progress
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Signed in successfully')),
-                          );
-                          Navigator.of(context).popUntil((r) => r.isFirst);
-                        } on Exception catch (e) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Sign in failed: ${e.toString()}')),
-                          );
-                        }
+                        context.read<AuthCubit>().signIn(email, password);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: accentGreen,

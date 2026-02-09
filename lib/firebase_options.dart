@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'coco-mobile-app-f0e69.firebasestorage.app',
     measurementId: 'G-R1EKH5WVZ1',
   );
+
 }

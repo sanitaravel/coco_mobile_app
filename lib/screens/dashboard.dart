@@ -59,7 +59,8 @@ class Dashboard extends StatelessWidget {
     return Scaffold(
       body: Container(
         margin: const EdgeInsets.all(30.0),
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -242,6 +243,7 @@ class Dashboard extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

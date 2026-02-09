@@ -10,6 +10,8 @@ import 'screens/calendar.dart';
 import 'screens/login.dart';
 import 'blocs/navigation_bloc.dart';
 import 'blocs/tasks_cubit.dart';
+import 'blocs/auth_cubit.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,7 @@ class MainApp extends StatefulWidget {
 
 class MainAppState extends State<MainApp> {
   final PageController _pageController = PageController();
+  bool _globalLoadingShown = false;
 
   static final List<Widget> _pages = <Widget>[
     Dashboard(),
@@ -45,114 +48,115 @@ class MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<NavigationBloc>(
-          create: (_) => NavigationBloc(),
-        ),
-        BlocProvider<TasksCubit>(
-          create: (_) => TasksCubit(),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          fontFamily: 'WixMadeforText',
-          scaffoldBackgroundColor: Color(0xFFDFE1D3),
-        ),
-        home: BlocBuilder<NavigationBloc, NavigationState>(
-          builder: (context, state) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _pageController.animateToPage(
-                state.currentIndex,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.ease,
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'WixMadeforText',
+        scaffoldBackgroundColor: const Color(0xFFDFE1D3),
+      ),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<NavigationBloc>(create: (_) => NavigationBloc()),
+          BlocProvider<TasksCubit>(create: (_) => TasksCubit()),
+          BlocProvider<AuthCubit>(create: (_) => AuthCubit(AuthService())),
+        ],
+        child: BlocListener<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (state.isLoading && !_globalLoadingShown) {
+              _globalLoadingShown = true;
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                useRootNavigator: true,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
               );
-            });
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  _titles[state.currentIndex],
-                  style: TextStyle(
-                    fontFamily: 'WixMadeforText',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                    letterSpacing: -0.14,
-                    color: Color(0xFF73AE50),
-                  ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: FaIcon(FontAwesomeIcons.gear),
-                    onPressed: () {
-                      // TODO: settings
-                    },
-                  ),
-                ],
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-              ),
-              body: PageView(
-                controller: _pageController,
-                physics: NeverScrollableScrollPhysics(),
-                children: _pages,
-              ),
-              bottomNavigationBar: Container(
-                height: 89,
-                padding: EdgeInsets.symmetric(horizontal: 30),
-                decoration: BoxDecoration(
-                  color: Color(0xFFDFE1D3),
-                  boxShadow: [
-                    BoxShadow(
-                      offset: Offset(0, 7),
-                      blurRadius: 15,
-                      spreadRadius: 0,
-                      color: Color(0xFF6C7242),
-                    ),
-                  ],
-                ),
-                child: BottomNavigationBar(
-                  items: <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                      icon: FaIcon(FontAwesomeIcons.chartBar),
-                      label: 'Dashboard',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: FaIcon(FontAwesomeIcons.file),
-                      label: 'Tutorials',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: FaIcon(FontAwesomeIcons.camera),
-                      label: 'Media',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: FaIcon(FontAwesomeIcons.calendar),
-                      label: 'Calendar',
-                    ),
-                  ],
-                  currentIndex: state.currentIndex,
-                  selectedItemColor: Color(0xFF73AE50),
-                  unselectedItemColor: Color(0xFFB7B8B2),
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
-                  selectedLabelStyle: TextStyle(
-                    fontFamily: 'WixMadeforText',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    letterSpacing: -0.12,
-                    color: Color(0xFF73AE50),
-                  ),
-                  type: BottomNavigationBarType.fixed,
-                  iconSize: 36,
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  onTap: (index) {
-                    context.read<NavigationBloc>().add(ChangePage(index));
-                  },
-                ),
-              ),
-            );
+              return;
+            }
+
+            if (!state.isLoading && _globalLoadingShown) {
+              _globalLoadingShown = false;
+              if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
+            }
           },
+          child: BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              if (authState.isLoading) {
+                return const Scaffold(body: Center(child: CircularProgressIndicator()));
+              }
+              if (authState.user == null) {
+                return const LoginPage();
+              }
+              return BlocBuilder<NavigationBloc, NavigationState>(
+                builder: (context, state) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _pageController.animateToPage(
+                      state.currentIndex,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.ease,
+                    );
+                  });
+                  return Scaffold(
+                    appBar: AppBar(
+                      title: Text(
+                        _titles[state.currentIndex],
+                        style: const TextStyle(
+                          fontFamily: 'WixMadeforText',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          letterSpacing: -0.14,
+                          color: Color(0xFF73AE50),
+                        ),
+                      ),
+                      actions: [
+                        IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.gear),
+                          onPressed: () {},
+                        ),
+                      ],
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                    ),
+                    body: PageView(controller: _pageController, physics: const NeverScrollableScrollPhysics(), children: _pages),
+                    bottomNavigationBar: Container(
+                      height: 89,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFDFE1D3),
+                        boxShadow: [BoxShadow(offset: Offset(0, 7), blurRadius: 15, spreadRadius: 0, color: Color(0xFF6C7242))],
+                      ),
+                      child: BottomNavigationBar(
+                        items: const <BottomNavigationBarItem>[
+                          BottomNavigationBarItem(icon: FaIcon(FontAwesomeIcons.chartBar), label: 'Dashboard'),
+                          BottomNavigationBarItem(icon: FaIcon(FontAwesomeIcons.file), label: 'Tutorials'),
+                          BottomNavigationBarItem(icon: FaIcon(FontAwesomeIcons.camera), label: 'Media'),
+                          BottomNavigationBarItem(icon: FaIcon(FontAwesomeIcons.calendar), label: 'Calendar'),
+                        ],
+                        currentIndex: state.currentIndex,
+                        selectedItemColor: const Color(0xFF73AE50),
+                        unselectedItemColor: const Color(0xFFB7B8B2),
+                        showSelectedLabels: false,
+                        showUnselectedLabels: false,
+                        selectedLabelStyle: const TextStyle(
+                          fontFamily: 'WixMadeforText',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          letterSpacing: -0.12,
+                          color: Color(0xFF73AE50),
+                        ),
+                        type: BottomNavigationBarType.fixed,
+                        iconSize: 36,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        onTap: (index) {
+                          context.read<NavigationBloc>().add(ChangePage(index));
+                        },
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
