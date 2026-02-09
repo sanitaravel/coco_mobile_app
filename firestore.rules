@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Tasks collection (top-level)
+    match /tasks/{taskId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.ownerId;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId
+        // basic required fields
+        && request.resource.data.keys().hasAll(['title', 'dueDate', 'ownerId'])
+        // createdAt/updatedAt must be set to server time
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.ownerId
+        // ownerId cannot be changed
+        && request.resource.data.ownerId == resource.data.ownerId
+        // createdAt cannot be changed
+        && resource.data.createdAt == request.resource.data.createdAt
+        // updatedAt must be set to server time on updates
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+
+    // Fallback: deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -87,6 +87,13 @@ class MainAppState extends State<MainApp> {
               if (authState.user == null) {
                 return const LoginPage();
               }
+              // Ensure TasksCubit listens to the authenticated user's tasks
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                try {
+                  final uid = authState.user?.uid;
+                  if (uid != null) context.read<TasksCubit>().setUser(uid);
+                } catch (_) {}
+              });
               return BlocBuilder<NavigationBloc, NavigationState>(
                 builder: (context, state) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {

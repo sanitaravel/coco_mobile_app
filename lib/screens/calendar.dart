@@ -39,12 +39,16 @@ class Calendar extends StatelessWidget {
                         const Spacer(),
                         ElevatedButton(
                           onPressed: () {
+                            final tasksCubit = context.read<TasksCubit>();
                             showModalBottomSheet(
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
-                              builder: (BuildContext context) {
-                                return const AddTaskDialog();
+                              builder: (BuildContext _) {
+                                return BlocProvider.value(
+                                  value: tasksCubit,
+                                  child: AddTaskDialog(tasksCubit: tasksCubit),
+                                );
                               },
                             );
                           },
