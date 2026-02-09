@@ -91,7 +91,7 @@ class MainAppState extends State<MainApp> {
                 children: _pages,
               ),
               bottomNavigationBar: Container(
-                height: 70,
+                height: 89,
                 padding: EdgeInsets.symmetric(horizontal: 30),
                 decoration: BoxDecoration(
                   color: Color(0xFFDFE1D3),

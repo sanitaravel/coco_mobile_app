@@ -136,7 +136,7 @@ class _TutorialsState extends State<Tutorials> {
               ],
             ),
           ),
-          const SizedBox(height: 64),
+          const SizedBox(height: 50),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: SizedBox(
@@ -160,7 +160,7 @@ class _TutorialsState extends State<Tutorials> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           SizedBox(
             height: 200,
             child: ListView.builder(

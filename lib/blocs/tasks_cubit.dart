@@ -71,6 +71,20 @@ class TasksCubit extends Cubit<TasksState> {
         completedSteps: [false, false, false, false],
         dueDate: DateTime(2026, 2, 5),
       ),
+      Task(
+        id: '4',
+        title: 'Film a tutorial',
+        subtitle: 'Create a cupcake making tutorial video',
+        description: 'Cupcake making',
+        steps: [
+          'Write a Script',
+          'Organize Filming Location',
+          'Practice the Script',
+          'Record the Video'
+        ],
+        completedSteps: [false, false, false, false],
+        dueDate: DateTime(2026, 2, 12),
+      ),
     ];
     emit(state.copyWith(tasks: tasks));
   }

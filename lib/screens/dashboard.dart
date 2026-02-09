@@ -52,7 +52,7 @@ class Dashboard extends StatelessWidget {
           ),
       ));
       if (i < socialNetworks.length - 1) {
-        socialCards.add(SizedBox(width: 16));
+        socialCards.add(SizedBox(width: 10));
       }
     }
 
@@ -63,7 +63,7 @@ class Dashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hello, [name]!',
+              'Hello, Nora!',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 38,
