@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import '../widgets/article_details.dart';
-import '../widgets/tutorial_card.dart';
 
 class ArticleData {
   final String title;

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../media_interactions/media_cubit.dart';
-import '../media_interactions/media_models.dart';
 import 'camera.dart';
 
 enum _AddTarget { photo, video }
