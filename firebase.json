@@ -1,0 +1,30 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "coco-mobile-app-f0e69",
+                    "appId": "1:12563388694:android:001b4e4dab782560fd5837",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "coco-mobile-app-f0e69",
+                    "configurations": {
+                        "android": "1:12563388694:android:001b4e4dab782560fd5837",
+                        "ios": "1:12563388694:ios:988f4cdd8872a6bcfd5837",
+                        "macos": "1:12563388694:ios:988f4cdd8872a6bcfd5837",
+                        "web": "1:12563388694:web:836d61739d12cdfbfd5837",
+                        "windows": "1:12563388694:web:dc1e04b36d2bcd1cfd5837"
+                    }
+                }
+            }
+        }
+    }
+    ,
+    "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+    }
+}

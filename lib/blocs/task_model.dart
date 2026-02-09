@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Task extends Equatable {
   final String id;
@@ -48,4 +49,44 @@ class Task extends Equatable {
 
   @override
   List<Object?> get props => [id, title, subtitle, description, steps, completedSteps, dueDate, isCompleted];
+}
+
+extension TaskFirestore on Task {
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'subtitle': subtitle,
+      'description': description,
+      'steps': steps ?? <String>[],
+      'completedSteps': completedSteps ?? List<bool>.filled(steps?.length ?? 0, false),
+      'dueDate': Timestamp.fromDate(dueDate),
+      'isCompleted': isCompleted,
+    };
+  }
+
+  static Task fromMap(String id, Map<String, dynamic> map) {
+    final ts = map['dueDate'];
+    DateTime due;
+    if (ts is Timestamp) {
+      due = ts.toDate();
+    } else if (ts is DateTime) {
+      due = ts;
+    } else {
+      due = DateTime.now();
+    }
+
+    final stepsList = (map['steps'] as List<dynamic>?)?.map((e) => e as String).toList();
+    final completed = (map['completedSteps'] as List<dynamic>?)?.map((e) => e as bool).toList();
+
+    return Task(
+      id: id,
+      title: (map['title'] as String?) ?? '',
+      subtitle: (map['subtitle'] as String?) ?? '',
+      description: (map['description'] as String?) ?? '',
+      steps: stepsList,
+      completedSteps: completed,
+      dueDate: due,
+      isCompleted: (map['isCompleted'] as bool?) ?? false,
+    );
+  }
 }

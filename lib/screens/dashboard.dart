@@ -5,12 +5,15 @@ import '../widgets/task_card.dart';
 import '../widgets/social_card.dart';
 import '../widgets/social_details.dart';
 import '../blocs/tasks_cubit.dart';
+import '../services/auth_service.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService().currentUser;
+    final displayName = user?.displayName ?? user?.email?.split('@').first ?? 'User';
     // Sample data for impressions month to date (30 days)
     final List<FlSpot> spots = List.generate(30, (index) {
       // Mock data: increasing impressions with some variation
@@ -52,18 +55,19 @@ class Dashboard extends StatelessWidget {
           ),
       ));
       if (i < socialNetworks.length - 1) {
-        socialCards.add(SizedBox(width: 16));
+        socialCards.add(SizedBox(width: 10));
       }
     }
 
     return Scaffold(
       body: Container(
         margin: const EdgeInsets.all(30.0),
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hello, [name]!',
+              'Hello, $displayName!',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 38,
@@ -242,6 +246,7 @@ class Dashboard extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

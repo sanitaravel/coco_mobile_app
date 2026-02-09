@@ -5,7 +5,9 @@ import '../blocs/tasks_cubit.dart';
 import '../blocs/task_model.dart';
 
 class AddTaskDialog extends StatefulWidget {
-  const AddTaskDialog({super.key});
+  final dynamic tasksCubit;
+
+  const AddTaskDialog({super.key, this.tasksCubit});
 
   @override
   State<AddTaskDialog> createState() => _AddTaskDialogState();
@@ -430,7 +432,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                       const Spacer(),
                       TextButton(
                         onPressed: _titleController.text.trim().isNotEmpty
-                            ? () {
+                            ? () async {
                                 final title = _titleController.text.trim();
                                 final description = _descriptionController.text.trim();
                                 final steps = _stepControllers
@@ -447,7 +449,9 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                                   completedSteps: completedSteps,
                                   dueDate: _selectedDate,
                                 );
-                                context.read<TasksCubit>().addTask(task);
+                                final cubit = widget.tasksCubit ?? context.read<TasksCubit>();
+                                await cubit.addTask(task);
+                                if (!mounted) return;
                                 Navigator.of(context).pop();
                               }
                             : null,
