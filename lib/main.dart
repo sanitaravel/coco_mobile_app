@@ -7,6 +7,7 @@ import 'screens/dashboard.dart';
 import 'screens/tutorials.dart';
 import 'screens/media.dart';
 import 'screens/calendar.dart';
+import 'screens/login.dart';
 import 'blocs/navigation_bloc.dart';
 import 'blocs/tasks_cubit.dart';
 
